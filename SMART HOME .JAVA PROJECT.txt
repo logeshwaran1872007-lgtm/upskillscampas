@@ -1,0 +1,51 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class SmartHomeController {
+
+    // Replace with your ESP32's IP address
+    private static final String ESP32_IP = "http://192.168.1.100"; 
+
+    public static void main(String[] args) {
+        System.out.println("Starting Smart Home System...");
+        
+        // Example: Turn the appliance ON, wait 5 seconds, then turn it OFF
+        sendCommand("/on");
+        
+        try {
+            Thread.sleep(5000); 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        sendCommand("/off");
+    }
+
+    private static void sendCommand(String endpoint) {
+        try {
+            URL url = new URL(ESP32_IP + endpoint);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            int responseCode = connection.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                System.out.println("Success! ESP32 Response: " + response.toString());
+            } else {
+                System.out.println("Failed to connect. HTTP Error Code: " + responseCode);
+            }
+        } catch (Exception e) {
+            System.out.println("Error communicating with ESP32: " + e.getMessage());
+        }
+    }
+}
