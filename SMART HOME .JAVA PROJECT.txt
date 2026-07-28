@@ -1,51 +1,84 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.awt.*;
+import java.awt.event.*;
 
-public class SmartHomeController {
+public class SmartHomeGUI extends Frame implements ActionListener {
+    
+    // UI Components
+    private Label statusLabel;
+    private Button lightBtn, fanBtn, acBtn;
+    
+    // State variables for appliances
+    private boolean lightOn = false;
+    private boolean fanOn = false;
+    private boolean acOn = false;
 
-    // Replace with your ESP32's IP address
-    private static final String ESP32_IP = "http://192.168.1.100"; 
+    public SmartHomeGUI() {
+        // Frame setup
+        setTitle("Smart Home Automation Dashboard");
+        setSize(400, 300);
+        setLayout(new BorderLayout());
 
-    public static void main(String[] args) {
-        System.out.println("Starting Smart Home System...");
+        // Header Label
+        Label headerLabel = new Label("Smart Home Control Panel", Label.CENTER);
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        add(headerLabel, BorderLayout.NORTH);
+
+        // Control Panel for Buttons
+        Panel controlPanel = new Panel();
+        controlPanel.setLayout(new GridLayout(3, 1, 10, 10));
+
+        // Initialize Buttons
+        lightBtn = new Button("Living Room Light: OFF");
+        fanBtn = new Button("Bedroom Fan: OFF");
+        acBtn = new Button("Air Conditioner: OFF");
+
+        // Add Action Listeners
+        lightBtn.addActionListener(this);
+        fanBtn.addActionListener(this);
+        acBtn.addActionListener(this);
+
+        // Add buttons to control panel
+        controlPanel.add(lightBtn);
+        controlPanel.add(fanBtn);
+        controlPanel.add(acBtn);
         
-        // Example: Turn the appliance ON, wait 5 seconds, then turn it OFF
-        sendCommand("/on");
-        
-        try {
-            Thread.sleep(5000); 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        
-        sendCommand("/off");
+        // Add control panel to the center of the Frame
+        add(controlPanel, BorderLayout.CENTER);
+
+        // Status Label at bottom
+        statusLabel = new Label("System Ready. All appliances are OFF.", Label.CENTER);
+        statusLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+        add(statusLabel, BorderLayout.SOUTH);
+
+        // Window listener to close the application
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                System.exit(0);
+            }
+        });
     }
 
-    private static void sendCommand(String endpoint) {
-        try {
-            URL url = new URL(ESP32_IP + endpoint);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            int responseCode = connection.getResponseCode();
-            
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                System.out.println("Success! ESP32 Response: " + response.toString());
-            } else {
-                System.out.println("Failed to connect. HTTP Error Code: " + responseCode);
-            }
-        } catch (Exception e) {
-            System.out.println("Error communicating with ESP32: " + e.getMessage());
+    // Handle Button Clicks
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == lightBtn) {
+            lightOn = !lightOn; // Toggle state
+            lightBtn.setLabel("Living Room Light: " + (lightOn ? "ON" : "OFF"));
+            statusLabel.setText("Status: Living Room Light turned " + (lightOn ? "ON" : "OFF"));
+        } else if (e.getSource() == fanBtn) {
+            fanOn = !fanOn; // Toggle state
+            fanBtn.setLabel("Bedroom Fan: " + (fanOn ? "ON" : "OFF"));
+            statusLabel.setText("Status: Bedroom Fan turned " + (fanOn ? "ON" : "OFF"));
+        } else if (e.getSource() == acBtn) {
+            acOn = !acOn; // Toggle state
+            acBtn.setLabel("Air Conditioner: " + (acOn ? "ON" : "OFF"));
+            statusLabel.setText("Status: Air Conditioner turned " + (acOn ? "ON" : "OFF"));
         }
+    }
+
+    public static void main(String[] args) {
+        // Launch the application
+        SmartHomeGUI dashboard = new SmartHomeGUI();
+        dashboard.setVisible(true);
     }
 }
